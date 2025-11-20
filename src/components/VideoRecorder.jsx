@@ -38,50 +38,51 @@ export default function VideoRecorder({ onRecorded, recording, setRecording }) {
   }
 
   return (
-    <div className="flex flex-col items-center mb-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 w-full flex flex-col items-center shadow-md">
-        <video
-          ref={videoRef}
-          className="border-2 border-blue-600 rounded-lg mt-2 mb-4 bg-black max-w-full"
-          autoPlay
-          playsInline
-          muted
-          style={{
-            display: recording ? "block" : previewUrl ? "block" : "none",
-            width: 320,
-            height: 240,
-          }}
-          src={previewUrl || undefined}
-          controls={!!previewUrl}
-        />
-        <div className="flex space-x-4 mb-2">
-          {!recording && (
-            <button
-              type="button"
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition"
-              onClick={startRecording}
-            >
-              Record Answer
-            </button>
-          )}
-          {recording && (
-            <button
-              type="button"
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition animate-pulse"
-              onClick={stopRecording}
-            >
-              Stop Recording
-            </button>
-          )}
-        </div>
-        <div className="mt-1 h-5 text-red-400 font-medium">
-          {recording ? "Recording..." : ""}
-        </div>
-        {previewUrl && !recording && (
-          <div className="mt-2 text-slate-400 text-xs">
-            Preview your answer above or re-record if needed.
-          </div>
+    <div className="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 shadow mb-2 flex flex-col items-center">
+      <video
+        ref={videoRef}
+        className="border-2 border-blue-600 rounded-lg bg-black w-full max-w-xl aspect-video mb-4"
+        autoPlay
+        playsInline
+        muted
+        style={{
+          display: recording ? "block" : previewUrl ? "block" : "none",
+        }}
+        src={previewUrl || undefined}
+        controls={!!previewUrl}
+      />
+      <div className="flex flex-wrap gap-4">
+        {!recording && (
+          <button
+            type="button"
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition"
+            onClick={startRecording}
+          >
+            Record Answer
+          </button>
         )}
+        {recording && (
+          <button
+            type="button"
+            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition animate-pulse"
+            onClick={stopRecording}
+          >
+            Stop Recording
+          </button>
+        )}
+      </div>
+      <div className="mt-2 text-xs min-h-[1.25rem]">
+        <span
+          className={
+            recording ? "text-red-400 font-semibold" : "text-slate-400"
+          }
+        >
+          {recording
+            ? "Recording..."
+            : previewUrl
+            ? "Preview above, re-record if needed."
+            : ""}
+        </span>
       </div>
     </div>
   );
