@@ -13,6 +13,7 @@ export default function VideoRecorder({ onRecorded, recording, setRecording }) {
       audio: true,
     });
     videoRef.current.srcObject = stream;
+    videoRef.current.src = ""; // Clear src if any
 
     let recorder = new window.MediaRecorder(stream, { mimeType: "video/webm" });
     recorder.ondataavailable = (e) => {
@@ -21,6 +22,8 @@ export default function VideoRecorder({ onRecorded, recording, setRecording }) {
     recorder.onstop = () => {
       const blob = new Blob(chunks, { type: "video/webm" });
       setPreviewUrl(URL.createObjectURL(blob));
+      videoRef.current.srcObject = null; // Clear stream for preview
+      videoRef.current.src = URL.createObjectURL(blob); // Set src for preview
       onRecorded(blob);
       stream.getTracks().forEach((track) => track.stop());
       setChunks([]);
@@ -37,19 +40,26 @@ export default function VideoRecorder({ onRecorded, recording, setRecording }) {
     setRecording(false);
   }
 
+  // Show appropriate video source
+  React.useEffect(() => {
+    if (!recording && previewUrl && videoRef.current) {
+      videoRef.current.src = previewUrl;
+      videoRef.current.srcObject = null;
+    }
+  }, [recording, previewUrl]);
+
   return (
     <div className="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 shadow mb-2 flex flex-col items-center">
       <video
         ref={videoRef}
         className="border-2 border-blue-600 rounded-lg bg-black w-full max-w-xl aspect-video mb-4"
-        autoPlay
+        autoPlay={recording}
         playsInline
-        muted
+        muted={recording}
+        controls={!recording && !!previewUrl}
         style={{
-          display: recording ? "block" : previewUrl ? "block" : "none",
+          display: recording || previewUrl ? "block" : "none",
         }}
-        src={previewUrl || undefined}
-        controls={!!previewUrl}
       />
       <div className="flex flex-wrap gap-4">
         {!recording && (
