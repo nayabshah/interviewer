@@ -1,9 +1,10 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 
 export default function VideoRecorder({ onRecorded, recording, setRecording }) {
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [chunks, setChunks] = useState([]);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const streamRef = useRef(null);
   const videoRef = useRef();
 
   async function startRecording() {
@@ -12,8 +13,11 @@ export default function VideoRecorder({ onRecorded, recording, setRecording }) {
       video: true,
       audio: true,
     });
-    videoRef.current.srcObject = stream;
-    videoRef.current.src = ""; // Clear src if any
+    streamRef.current = stream;
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.src = "";
+    }
 
     let recorder = new window.MediaRecorder(stream, { mimeType: "video/webm" });
     recorder.ondataavailable = (e) => {
@@ -21,12 +25,16 @@ export default function VideoRecorder({ onRecorded, recording, setRecording }) {
     };
     recorder.onstop = () => {
       const blob = new Blob(chunks, { type: "video/webm" });
-      setPreviewUrl(URL.createObjectURL(blob));
-      videoRef.current.srcObject = null; // Clear stream for preview
-      videoRef.current.src = URL.createObjectURL(blob); // Set src for preview
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+        videoRef.current.src = url;
+      }
       onRecorded(blob);
       stream.getTracks().forEach((track) => track.stop());
       setChunks([]);
+      streamRef.current = null;
     };
     setMediaRecorder(recorder);
     recorder.start();
@@ -40,12 +48,25 @@ export default function VideoRecorder({ onRecorded, recording, setRecording }) {
     setRecording(false);
   }
 
-  // Show appropriate video source
-  React.useEffect(() => {
-    if (!recording && previewUrl && videoRef.current) {
-      videoRef.current.src = previewUrl;
-      videoRef.current.srcObject = null;
+  // ---- Ensure correct video src/srcObject always set ----
+  useEffect(() => {
+    if (recording) {
+      // Show live webcam stream during recording
+      if (streamRef.current && videoRef.current) {
+        videoRef.current.srcObject = streamRef.current;
+        videoRef.current.src = "";
+      }
+    } else if (previewUrl) {
+      // Show preview on stop
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+        videoRef.current.src = previewUrl;
+      }
     }
+    // Cleanup: revoke preview URL when component unmounts or URL changes
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
   }, [recording, previewUrl]);
 
   return (
@@ -56,7 +77,7 @@ export default function VideoRecorder({ onRecorded, recording, setRecording }) {
         autoPlay={recording}
         playsInline
         muted={recording}
-        controls={!recording && !!previewUrl}
+        controls={Boolean(previewUrl) && !recording}
         style={{
           display: recording || previewUrl ? "block" : "none",
         }}
