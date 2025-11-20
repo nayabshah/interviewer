@@ -3,6 +3,7 @@ import { generateQuestion } from "../services/aiQuestionService";
 import VideoRecorder from "./VideoRecorder";
 import parseGeminiResponse from "../utils/parseGeminiResponse";
 import GeminiChat from "./GeminiChat"; // Implement your live chat component
+import useGeminiChat from "../hooks/useGeminiChat";
 
 const TOTAL_QUESTIONS = 5;
 
@@ -39,6 +40,11 @@ export default function InterviewPage({ preInterview, onFinish, onDone }) {
     }
   }
 
+  const {
+    messages,
+    loading: geminiLoading,
+    sendMessage,
+  } = useGeminiChat({ apiKey: import.meta.env.VITE_API_KEY });
   const handleRecorded = (blob) => setRecordedBlob(blob);
 
   const handleNext = () => {
@@ -56,11 +62,6 @@ export default function InterviewPage({ preInterview, onFinish, onDone }) {
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-6xl bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 flex flex-col md:flex-row p-0">
-        <GeminiChat
-          messages={messages} // An array of {role, text} objects
-          onSend={handleGeminiSendMessage} // Function to send user input to Gemini, add AI responses with role: "ai"
-          loading={geminiIsThinking} // Optional, show typing indicator if AI streaming
-        />
         <div className="md:w-2/3 w-full flex flex-col items-center border-b border-slate-700 md:border-b-0 md:border-r">
           <div className="w-full px-6 pt-8 pb-2">
             <h2 className="text-2xl font-bold mb-2 text-slate-100 text-left">
@@ -97,23 +98,15 @@ export default function InterviewPage({ preInterview, onFinish, onDone }) {
           {/* Live Gemini Chat (bottom) */}
           <div className="w-full h-72 md:h-[340px] bg-slate-900 border-t border-slate-700 px-6 pt-4 pb-6">
             {/* Replace below div with your live chat component */}
-            <div className="h-full flex flex-col">
-              <div className="font-bold text-slate-200 mb-2">
-                Live Gemini Chat
-              </div>
-              {/* <GeminiChat ...props /> */}
-              <div className="flex-1 rounded-lg bg-slate-800 border border-slate-700 p-4 text-slate-300 overflow-y-auto">
-                {/* Placeholder for chat stream */}
-                <div className="italic text-slate-500">
-                  Gemini will chat here with tips, clarifications, and
-                  encouragement!
-                </div>
-              </div>
-            </div>
+            <GeminiChat
+              messages={messages}
+              onSend={sendMessage}
+              loading={geminiLoading} // Optional, show typing indicator if AI streaming
+            />
           </div>
         </div>
         {/* Right: Questions + Suggestion */}
-        <div className="md:w-1/3 w-full p-6 flex flex-col bg-slate-900 rounded-r-2xl justify-start">
+        <div className="md:w-2/3 w-full p-6 flex flex-col bg-slate-900 rounded-r-2xl justify-start">
           <h2 className="text-lg font-bold mb-2 text-blue-200 text-left">
             Interview {currentQ + 1} of {TOTAL_QUESTIONS}
           </h2>
