@@ -1,0 +1,35 @@
+import React, { useState } from "react";
+import SetupScreen from "./components/SetupScreen";
+import InterviewScreen from "./components/InterviewScreen";
+
+const App = () => {
+  const [appStatus, setAppStatus] = useState("SETUP");
+  const [jobConfig, setJobConfig] = useState({
+    title: "",
+    company: "",
+    description: "",
+    level: "",
+  });
+
+  const handleStart = (config) => {
+    setJobConfig(config);
+    setAppStatus("ACTIVE");
+  };
+
+  const handleEnd = () => {
+    setAppStatus("SETUP");
+    setJobConfig(null);
+  };
+
+  return (
+    <div className="bg-slate-950 min-h-screen text-slate-200">
+      {appStatus === "SETUP" && <SetupScreen onStart={handleStart} />}
+
+      {appStatus === "ACTIVE" && jobConfig && (
+        <InterviewScreen config={jobConfig} onEnd={handleEnd} />
+      )}
+    </div>
+  );
+};
+
+export default App;
